@@ -1,6 +1,16 @@
-v2.1.0 - Browser Crash Prevention & 4K Layout Fixes
+v2.1.1 - Browser Executable Name Fix (CRITICAL)
 
 ## Release Notes - August 7, 2025
+
+### CRITICAL HOTFIX v2.1.1:
+- 🔧 **FIXED**: Browser executable name from `chromium-browser` to `chromium`
+- 🎯 **RESULT**: Browser crash prevention now works correctly
+- ✅ **IMPACT**: No more Linux desktop showing when browser crashes
+- 🔄 **STATUS**: Auto-restart monitoring fully operational
+
+---
+
+## Previous Release: v2.1.0 - Browser Crash Prevention & 4K Layout Fixes
 
 ### Major Features Added:
 - ✅ Complete browser crash prevention system
