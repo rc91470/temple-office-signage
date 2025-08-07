@@ -667,11 +667,11 @@ class DigitalSignage:
         try:
             # Kill any existing browser processes using killall (more reliable than pkill)
             try:
-                subprocess.run(['killall', 'chromium-browser'], capture_output=True)
+                subprocess.run(['killall', 'chromium'], capture_output=True)
             except FileNotFoundError:
                 # If killall isn't available, try pkill
                 try:
-                    subprocess.run(['pkill', '-f', 'chromium-browser'], capture_output=True)
+                    subprocess.run(['pkill', '-f', 'chromium'], capture_output=True)
                 except FileNotFoundError:
                     # If neither works, continue anyway
                     pass
@@ -679,7 +679,7 @@ class DigitalSignage:
             
             # Start new browser process
             browser_cmd = [
-                'chromium-browser',
+                'chromium',
                 '--kiosk',
                 '--disable-infobars', 
                 '--disable-session-crashed-bubble',
@@ -748,12 +748,12 @@ class DigitalSignage:
                     
             # Check if any chromium process is running (more reliable method)
             try:
-                result = subprocess.run(['pgrep', '-f', 'chromium-browser'], 
+                result = subprocess.run(['pgrep', '-f', 'chromium'], 
                                       capture_output=True, text=True)
             except FileNotFoundError:
                 # If pgrep not available, use ps and grep
                 result = subprocess.run(['ps', 'aux'], capture_output=True, text=True)
-                if 'chromium-browser' not in result.stdout:
+                if 'chromium' not in result.stdout:
                     result.returncode = 1  # Set failure code if not found
                 else:
                     result.returncode = 0  # Set success code if found
@@ -841,10 +841,10 @@ class DigitalSignage:
             
             # Kill any remaining chromium processes using multiple methods
             try:
-                subprocess.run(['killall', 'chromium-browser'], capture_output=True)
+                subprocess.run(['killall', 'chromium'], capture_output=True)
             except FileNotFoundError:
                 try:
-                    subprocess.run(['pkill', '-f', 'chromium-browser'], capture_output=True)
+                    subprocess.run(['pkill', '-f', 'chromium'], capture_output=True)
                 except FileNotFoundError:
                     pass  # Neither command available
             
