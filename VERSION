@@ -1,0 +1,42 @@
+v2.1.0 - Browser Crash Prevention & 4K Layout Fixes
+
+## Release Notes - August 7, 2025
+
+### Major Features Added:
+- ✅ Complete browser crash prevention system
+- ✅ Automatic browser health monitoring (every 5 minutes)
+- ✅ Robust browser restart on process death
+- ✅ Comprehensive 4K display layout optimization
+- ✅ Enhanced news ticker system with real local content
+- ✅ Lightning detection with dynamic update scheduling
+
+### Bug Fixes:
+- ✅ Fixed calendar header blocking third month
+- ✅ Fixed weather/news area 4K layout overflow
+- ✅ Enhanced lightning alert visibility and functionality
+- ✅ Resolved CFSS dashboard text overlap issues
+- ✅ Fixed news ticker animation timing and scrolling
+- ✅ Improved browser process management with fallback methods
+
+### System Improvements:
+- ✅ Added comprehensive logging for browser control
+- ✅ Implemented graceful browser cleanup on business day end
+- ✅ Enhanced TV control via HDMI-CEC with fallback methods
+- ✅ Added periodic health checks with automatic recovery
+- ✅ Optimized dashboard rotation with JavaScript-based switching
+
+### Technical Details:
+- Browser monitoring prevents "Linux desktop showing" crashes
+- 4K layout optimizations for 2560px+ displays
+- News system with 10 comprehensive local stories
+- Weather integration with real-time lightning tracking
+- Google Calendar integration with error handling
+- Systemd service management with robust process control
+
+### Crash Prevention Features:
+- Process health monitoring with 5-minute intervals
+- Automatic browser restart on death detection
+- Multiple process management fallback methods (killall/pkill/ps)
+- Comprehensive logging to /tmp/browser-control.log
+- Business hours integration (7 AM - 5 PM weekdays)
+- Graceful process cleanup on service shutdown

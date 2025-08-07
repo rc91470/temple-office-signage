@@ -1,0 +1,55 @@
+# Logs and temporary files
+*.log
+/tmp/browser-control.log
+/tmp/tv-control.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Credentials and tokens
+credentials.json
+token.json
+*.key
+.env
+
+# SharePoint sync (local only)
+sharepoint-sync/
+
+# System service files (should be managed separately)
+*.service
