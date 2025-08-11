@@ -1,17 +1,18 @@
-# Temple Office Digital Signage - v2.1.0
+# Temple Office Digital Signage - v2.1.2
 
-A comprehensive digital signage system with 4K display optimization, browser crash prevention, weather integration, and Google Calendar sync.
+A comprehensive digital signage system with **bulletproof browser crash prevention**, 4K display optimization, weather integration, and Google Calendar sync.
 
 ## Features
 
-- **Browser Crash Prevention**: Automatic monitoring and restart of browser processes
-- **4K Display Optimization**: Enhanced layouts for high-resolution displays
-- **Weather Integration**: Real-time weather with lightning detection and safety alerts
-- **Google Calendar Sync**: Displays upcoming events with proper formatting
-- **CFSS Dashboard**: Circuit monitoring with auto-scroll functionality
-- **News Ticker**: Local news content with smooth scrolling animation
-- **TV Control**: HDMI-CEC integration for automatic TV on/off
-- **Business Hours**: Scheduled operation (7 AM - 5 PM weekdays)
+- **🛡️ Bulletproof Crash Prevention**: Tested automatic monitoring and restart of browser processes
+- **🖥️ 4K Display Optimization**: Enhanced layouts for high-resolution displays  
+- **🌤️ Weather Integration**: Real-time weather with lightning detection and safety alerts
+- **📅 Google Calendar Sync**: Displays upcoming events with proper formatting
+- **📊 CFSS Dashboard**: Circuit monitoring with auto-scroll functionality
+- **📰 News Ticker**: Local news content with smooth scrolling animation
+- **📺 TV Control**: HDMI-CEC integration for automatic TV on/off
+- **⏰ Business Hours**: Scheduled operation (7 AM - 5 PM weekdays)
+- **🔧 SystemD Integration**: Reliable service management with proper environment
 
 ## System Requirements
 
@@ -67,15 +68,18 @@ A comprehensive digital signage system with 4K display optimization, browser cra
 
 ## Crash Prevention
 
-The system includes comprehensive browser crash prevention:
-- Process monitoring every 5 minutes during business hours
-- Automatic restart on browser death
-- Multiple process management fallback methods
-- Logging to `/tmp/browser-control.log`
-- Graceful cleanup on service shutdown
+The system includes comprehensive **bulletproof** browser crash prevention:
+- ✅ **TESTED & VERIFIED**: Process monitoring every 5 minutes during business hours
+- ✅ **PROVEN RELIABLE**: Automatic restart on browser death (tested with manual kill)
+- 🛡️ **BULLETPROOF**: SystemD service with proper PATH environment for chromium access
+- 🔍 **COMPREHENSIVE**: Multiple process management fallback methods
+- 📋 **DETAILED LOGGING**: Activity logged to `/tmp/browser-control.log`
+- ⚡ **GRACEFUL**: Clean shutdown and restart procedures
 
 ## Version History
 
+- **v2.1.2** - SystemD Service PATH Fix (Current) - CRITICAL FIX: Updated systemd service PATH to include `/usr/bin` for chromium executable. TESTED crash prevention - manual process kill results in automatic restart within 5 minutes. System now truly bulletproof.
+- **v2.1.1** - Browser Executable Path Fix - Fixed browser executable name from `chromium-browser` to `chromium`, improved monitoring reliability
 - **v2.1.0** - Browser crash prevention, 4K layout fixes, enhanced news system
 - **v2.0.0** - Major rewrite with weather integration and Google Calendar
 - **v1.0.0** - Basic digital signage functionality
