@@ -7,7 +7,7 @@ export DISPLAY=:0
 sleep 5
 
 # Launch Chromium in kiosk mode with 4K optimizations
-chromium-browser \
+chromium \
     --start-fullscreen \
     --kiosk \
     --incognito \
@@ -30,5 +30,5 @@ chromium-browser \
 # If that fails, try with different approach
 if [ $? -ne 0 ]; then
     sleep 2
-    DISPLAY=:0 chromium-browser --kiosk http://localhost:8080
+    DISPLAY=:0 chromium --kiosk http://localhost:8080
 fi

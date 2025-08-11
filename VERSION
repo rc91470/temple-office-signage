@@ -1,16 +1,30 @@
-v2.1.1 - Browser Executable Name Fix (CRITICAL)
+v2.1.2 - SystemD Service PATH Fix (CRITICAL)
 
-## Release Notes - August 7, 2025
+## Release Notes - August 11, 2025
 
-### CRITICAL HOTFIX v2.1.1:
+### CRITICAL HOTFIX v2.1.2:
+- 🔧 **FIXED**: SystemD service PATH environment to include /usr/bin
+- 🎯 **RESULT**: Browser monitoring can now find and execute chromium
+- ✅ **TESTED**: Crash prevention verified - browser auto-restarts after kill
+- 🔄 **STATUS**: Bulletproof crash recovery fully operational
+
+### SystemD Service Improvements:
+- Added full system PATH to service environment
+- Browser executable now properly accessible from service context
+- Crash prevention system tested and confirmed working
+- No more desktop showing after browser crashes
+
+---
+
+## Previous Releases:
+
+### v2.1.1 - Browser Executable Name Fix:
 - 🔧 **FIXED**: Browser executable name from `chromium-browser` to `chromium`
 - 🎯 **RESULT**: Browser crash prevention now works correctly
 - ✅ **IMPACT**: No more Linux desktop showing when browser crashes
 - 🔄 **STATUS**: Auto-restart monitoring fully operational
 
----
-
-## Previous Release: v2.1.0 - Browser Crash Prevention & 4K Layout Fixes
+### v2.1.0 - Browser Crash Prevention & 4K Layout Fixes:
 
 ### Major Features Added:
 - ✅ Complete browser crash prevention system
