@@ -35,8 +35,8 @@ class DigitalSignage:
     def __init__(self):
         self.current_dashboard = 0
         self.dashboards = [
-            {"name": "CFSS Dashboard", "url": "http://localhost:8080/cfss", "duration": 30},
-            {"name": "3-Month Calendar", "url": "http://localhost:8080/calendar3", "duration": 20},
+            {"name": "CFSS Dashboard", "url": "http://localhost:8080/cfss", "duration": 45},
+            {"name": "3-Month Calendar", "url": "http://localhost:8080/calendar3", "duration": 45},
             {"name": "Temple Weather", "url": "http://localhost:8080/weather", "duration": 15},
         ]
         # Set TV on by default during business hours
@@ -729,12 +729,8 @@ class DigitalSignage:
             return False
 
     def check_browser_health(self):
-        """Check if browser is running and restart if needed"""
+        """Check if browser is running and restart if needed - runs 24/7"""
         current_time = datetime.now()
-        
-        # Only check during business hours when TV should be on
-        if not self.tv_on:
-            return True
             
         try:
             # Check if our browser process is still alive
@@ -861,6 +857,32 @@ class DigitalSignage:
 # Global signage controller
 signage = DigitalSignage()
 
+# Start 24/7 browser monitoring immediately when system starts
+def start_24_7_browser_monitoring():
+    """Start browser and continuous 24/7 monitoring"""
+    print(f"{datetime.now()}: Starting 24/7 browser monitoring")
+    
+    # Start browser
+    if signage.start_browser():
+        # Start dashboard switching
+        time.sleep(3)
+        signage.switch_dashboard()
+        
+        # Set up continuous browser health checks every 5 minutes
+        schedule_24_7_browser_health_check()
+    else:
+        print(f"{datetime.now()}: Failed to start browser - will retry in 1 minute")
+        threading.Timer(60, start_24_7_browser_monitoring).start()
+
+def schedule_24_7_browser_health_check():
+    """Schedule continuous 24/7 browser health checks"""
+    signage.check_browser_health()
+    # Schedule next check in 5 minutes (always, regardless of TV state)
+    threading.Timer(300, schedule_24_7_browser_health_check).start()
+
+# Start 24/7 monitoring immediately
+start_24_7_browser_monitoring()
+
 # Add a manual scheduler check function
 def run_pending_jobs():
     """Run pending scheduled jobs"""
@@ -980,8 +1002,8 @@ def home():
     
     <script>
         const dashboards = [
-            { url: '/cfss', name: 'CFSS Dashboard', duration: 25000 },
-            { url: '/calendar3', name: '3-Month Calendar', duration: 15000 },
+            { url: '/cfss', name: 'CFSS Dashboard', duration: 45000 },
+            { url: '/calendar3', name: '3-Month Calendar', duration: 45000 },
             { url: '/weather', name: 'Temple Weather', duration: 15000 }
         ];
         
@@ -1087,21 +1109,23 @@ def cfss_dashboard():
             word-wrap: break-word !important; /* Break long words */
         }
         
-        /* OPTIMIZED: Fast-start smooth CFSS auto-scroll - NO blank screen time */
+        /* OPTIMIZED: 4K smooth CFSS auto-scroll - ALTERNATIVE METHOD */
         .auto-scroll {
-            animation: autoScroll 20s infinite ease-in-out !important;
-            transform: translateZ(0); /* Force hardware acceleration */
-            will-change: transform; /* Optimize for smooth transforms */
-            backface-visibility: hidden; /* Prevent flickering */
+            animation: autoScrollSmooth 40s infinite linear !important;
+            transform: translate3d(0, 0, 0);
+            will-change: transform;
+            backface-visibility: hidden;
+            filter: blur(0);
+            animation-fill-mode: both;
+            animation-timing-function: linear;
         }
         
-        @keyframes autoScroll {
-            0% { transform: translateY(0) translateZ(0); } /* Start immediately */
-            10% { transform: translateY(0) translateZ(0); } /* Brief hold 2s */
-            45% { transform: translateY(-120vh) translateZ(0); } /* DEEPER scroll to reach bottom */
-            55% { transform: translateY(-120vh) translateZ(0); } /* Hold at bottom 2s */
-            90% { transform: translateY(0) translateZ(0); } /* Return 7s */
-            100% { transform: translateY(0) translateZ(0); } /* Complete */
+        @keyframes autoScrollSmooth {
+            0% { transform: translate3d(0, 0, 0); }
+            17.5% { transform: translate3d(0, 0, 0); }
+            47.5% { transform: translate3d(0, -140vh, 0); }
+            67.5% { transform: translate3d(0, -140vh, 0); }
+            100% { transform: translate3d(0, 0, 0); }
         }
         
         /* Media queries - OPTIMIZED for better content density and readability */
@@ -1143,14 +1167,14 @@ def cfss_dashboard():
                 width: 99% !important; /* SLIGHTLY wider for 4K to prevent overlap */
                 max-width: none !important; /* Remove width restrictions */
             }
-            @keyframes autoScroll {
-                0% { transform: translateY(0) translateZ(0); } /* Start immediately */
-                10% { transform: translateY(0) translateZ(0); } /* Brief hold */
-                45% { transform: translateY(-80vh) translateZ(0); } /* DEEPER scroll for 4K to reach bottom */
-                55% { transform: translateY(-80vh) translateZ(0); } /* Hold at bottom */
-                90% { transform: translateY(0) translateZ(0); } /* Return */
-                100% { transform: translateY(0) translateZ(0); } /* Complete */
+            @keyframes autoScrollSmooth {
+                0% { transform: translate3d(0, 0, 0); }
+                17.5% { transform: translate3d(0, 0, 0); }
+                47.5% { transform: translate3d(0, -110vh, 0); }
+                67.5% { transform: translate3d(0, -110vh, 0); }
+                100% { transform: translate3d(0, 0, 0); }
             }
+            
         }
         </style>
         '''
@@ -1224,7 +1248,8 @@ def generate_month_calendar(events, year=None, month=None):
     if month is None:
         month = datetime.now().month
     
-    # Create calendar matrix
+    # Create calendar matrix - SET SUNDAY AS FIRST DAY
+    calendar.setfirstweekday(calendar.SUNDAY)
     cal = calendar.monthcalendar(year, month)
     today = datetime.now().date()
     
@@ -1716,7 +1741,8 @@ def calendar3_dashboard():
         month = month_date.month
         month_name = calendar.month_name[month]
         
-        # Generate calendar for this month
+        # Generate calendar for this month - SET SUNDAY AS FIRST DAY
+        calendar.setfirstweekday(calendar.SUNDAY)
         cal = calendar.monthcalendar(year, month)
         today = now.date()
         
@@ -1799,8 +1825,8 @@ def calendar3_dashboard():
                         bg_color = event.get('calendar_bg_color', '#4285f4')
                         fg_color = event.get('calendar_fg_color', '#ffffff')
                         
-                        # Shorter title for 3-month view
-                        display_title = title[:12] + ("..." if len(title) > 12 else "")
+                        # Don't truncate title - let CSS handle display
+                        display_title = title
                         if time_str and time_str != 'All day':
                             display_text = f"{time_str[:5]} - {display_title}"
                         else:
@@ -1848,7 +1874,7 @@ def calendar3_dashboard():
         
         /* FIXED: Calendar 3-month scroll - ACTUALLY reaches all 3 months */
         .auto-scroll {{
-            animation: scrollDown 18s infinite ease-in-out;
+            animation: scrollDown 22.5s infinite ease-in-out;
             transform: translateZ(0); /* Force hardware acceleration */
             will-change: transform; /* Optimize for smooth transforms */
             backface-visibility: hidden; /* Prevent flickering */
@@ -1858,10 +1884,10 @@ def calendar3_dashboard():
             0% {{ transform: translateY(0) translateZ(0); }} /* Month 1 */
             25% {{ transform: translateY(0) translateZ(0); }} /* Hold Month 1 - 4.5s */
             35% {{ transform: translateY(-100vh) translateZ(0); }} /* Transition to Month 2 - 1.8s */
-            60% {{ transform: translateY(-100vh) translateZ(0); }} /* Hold Month 2 - 4.5s */
-            70% {{ transform: translateY(-200vh) translateZ(0); }} /* Transition to Month 3 - 1.8s */
-            95% {{ transform: translateY(-200vh) translateZ(0); }} /* Hold Month 3 - 4.5s */
-            100% {{ transform: translateY(0) translateZ(0); }} /* Return to Month 1 - 0.9s */
+            55% {{ transform: translateY(-100vh) translateZ(0); }} /* Hold Month 2 - 3.6s */
+            65% {{ transform: translateY(-200vh) translateZ(0); }} /* Transition to Month 3 - 1.8s */
+            90% {{ transform: translateY(-200vh) translateZ(0); }} /* Hold Month 3 - 4.5s LONGER */
+            100% {{ transform: translateY(0) translateZ(0); }} /* Return to Month 1 - 1.8s */
         }}
         
         .calendar-container-3 {{
@@ -1978,11 +2004,11 @@ def calendar3_dashboard():
             color: white;
             padding: 12px 15px;
             border-radius: 8px;
-            font-size: 1.8em;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            line-height: 1.2;
+            font-size: 1.6em;
+            line-height: 1.3;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
         }}
         
         .event-3.more-3 {{
