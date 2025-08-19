@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Enhanced Digital Signage with SharePoint + Temple Weather
-# Version 2.3.0 - Professional Multi-Day Calendar Events with Spanning Bars
+# Version 2.4.0 - Weather Dashboard Enhancements and Lightning System Fixes
 import os
 import signal
 import time
@@ -38,7 +38,7 @@ class DigitalSignage:
         self.dashboards = [
             {"name": "CFSS Dashboard", "url": "http://localhost:8080/cfss", "duration": 45},
             {"name": "3-Month Calendar", "url": "http://localhost:8080/calendar3", "duration": 45},
-            {"name": "Temple Weather", "url": "http://localhost:8080/weather", "duration": 15},
+            {"name": "Temple Weather", "url": "http://localhost:8080/weather", "duration": 45},
         ]
         # Set TV on by default during business hours
         current_time = datetime.now().time()
@@ -957,6 +957,15 @@ def debug_tv_off():
     except Exception as e:
         return {'status': 'error', 'message': str(e)}
 
+@app.route('/api/debug/tv-on')
+def debug_tv_on():
+    """Manual trigger for TV on (for testing)"""
+    try:
+        signage.turn_tv_on()
+        return {'status': 'success', 'message': 'TV turn-on command sent - check logs for details'}
+    except Exception as e:
+        return {'status': 'error', 'message': str(e)}
+
 @app.route('/')
 def home():
     """Main rotating dashboard page"""
@@ -1005,7 +1014,7 @@ def home():
         const dashboards = [
             { url: '/cfss', name: 'CFSS Dashboard', duration: 45000 },
             { url: '/calendar3', name: '3-Month Calendar', duration: 45000 },
-            { url: '/weather', name: 'Temple Weather', duration: 15000 }
+            { url: '/weather', name: 'Temple Weather', duration: 45000 }
         ];
         
         let currentIndex = 0;
@@ -2380,8 +2389,15 @@ def weather_dashboard():
             recent_strikes = sorted(strikes, key=lambda x: x['timestamp'], reverse=True)[:10]
             map_html = '<div class="strike-list">'
             for i, strike in enumerate(recent_strikes):
-                time_ago = (datetime.now() - datetime.fromisoformat(strike['timestamp'])).total_seconds() / 60
-                direction = self.get_direction_from_coordinates(self.temple_lat, self.temple_lon, 
+                # Handle both datetime objects and ISO strings
+                timestamp = strike['timestamp']
+                if isinstance(timestamp, str):
+                    strike_time = datetime.fromisoformat(timestamp)
+                else:
+                    strike_time = timestamp  # Already a datetime object
+                
+                time_ago = (datetime.now() - strike_time).total_seconds() / 60
+                direction = signage.get_direction_from_coordinates(signage.temple_lat, signage.temple_lon, 
                                                         strike['latitude'], strike['longitude'])
                 map_html += f'''
                 <div class="strike-item">
@@ -2413,7 +2429,7 @@ def weather_dashboard():
                     <span class="stat-label">Strikes (1hr)</span>
                 </div>
                 <div class="stat">
-                    <span class="stat-number">{len([s for s in strikes if (datetime.now() - datetime.fromisoformat(s['timestamp'])).total_seconds() / 60 <= 15])}</span>
+                    <span class="stat-number">{len([s for s in strikes if (datetime.now() - (datetime.fromisoformat(s['timestamp']) if isinstance(s['timestamp'], str) else s['timestamp'])).total_seconds() / 60 <= 15])}</span>
                     <span class="stat-label">Recent (15min)</span>
                 </div>
                 <div class="stat">
@@ -2523,7 +2539,7 @@ def weather_dashboard():
             height: 100vh;
             color: #e0e0e0;
             overflow: hidden;
-            padding: 10px;
+            padding: 5px; /* REDUCE PADDING TO PREVENT CUTOFF */
             box-sizing: border-box;
         }}
         
@@ -2531,7 +2547,7 @@ def weather_dashboard():
             display: grid;
             grid-template-columns: 58% 42%; /* ADJUST RATIO FOR BETTER FIT */
             gap: 10px; /* REDUCE GAP */
-            height: calc(100vh - 20px); /* USE FULL HEIGHT MINUS PADDING */
+            height: calc(100vh - 60px); /* EVEN MORE PADDING TO ENSURE BOTTOM BORDERS SHOW */
             max-width: 100vw; /* ENSURE NO OVERFLOW */
             margin: 0;
             padding: 0;
@@ -2543,11 +2559,11 @@ def weather_dashboard():
             border-radius: 15px;
             padding: 20px;
             border: 2px solid rgba(52, 152, 219, 0.3);
-            overflow: hidden; /* PREVENT ANY OVERFLOW */
+            overflow-y: auto; /* ALLOW SCROLLING IF NEEDED */
             height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: space-between; /* DISTRIBUTE CONTENT EVENLY */
+            justify-content: flex-start; /* ALIGN TO TOP, DON'T STRETCH */
             box-sizing: border-box;
         }}
         
@@ -2556,11 +2572,11 @@ def weather_dashboard():
             border-radius: 15px;
             padding: 20px;
             border: 2px solid rgba(231, 76, 60, 0.3);
-            overflow: hidden; /* PREVENT ANY OVERFLOW */
+            overflow-y: auto; /* ALLOW SCROLLING IF NEEDED */
             height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: space-between; /* DISTRIBUTE CONTENT EVENLY */
+            justify-content: flex-start; /* ALIGN TO TOP, DON'T STRETCH */
             box-sizing: border-box;
         }}
         
