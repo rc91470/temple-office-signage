@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # Enhanced Digital Signage with SharePoint + Temple Weather
+# Version 2.3.0 - Professional Multi-Day Calendar Events with Spanning Bars
 import os
 import signal
 import time
@@ -145,7 +146,7 @@ class DigitalSignage:
             
         try:
             print("Calling calendar.get_upcoming_events...")
-            self.calendar_events = self.calendar.get_upcoming_events(max_results=8, days_ahead=30)
+            self.calendar_events = self.calendar.get_upcoming_events(max_results=8, days_ahead=90)
             print(f"Calendar updated: {len(self.calendar_events)} events loaded")
             if self.calendar_events:
                 print(f"First event: {self.calendar_events[0]['title']}")
@@ -1253,47 +1254,68 @@ def generate_month_calendar(events, year=None, month=None):
     cal = calendar.monthcalendar(year, month)
     today = datetime.now().date()
     
-    # Group events by date
+    # Group events by date - HANDLE MULTI-DAY EVENTS
     events_by_date = {}
     for event in events:
         if not event:
             continue
             
-        event_date = None
+        start_date = None
+        end_date = None
         
-        # Try to get date from various fields
+        # Try to get start date from various fields
         if 'date_obj' in event and event['date_obj']:
-            event_date = event['date_obj']
+            start_date = event['date_obj']
         elif 'start_datetime' in event and event['start_datetime']:
             # Parse the datetime string if needed
             try:
                 if isinstance(event['start_datetime'], str):
                     if 'T' in event['start_datetime']:
                         dt = datetime.fromisoformat(event['start_datetime'].replace('Z', '+00:00'))
-                        event_date = dt.date()
+                        start_date = dt.date()
                     else:
-                        event_date = datetime.fromisoformat(event['start_datetime']).date()
+                        start_date = datetime.fromisoformat(event['start_datetime']).date()
                 else:
-                    event_date = event['start_datetime'].date()
+                    start_date = event['start_datetime'].date()
             except:
                 # Try to parse from 'date' field
                 date_str = event.get('date', '')
                 if date_str == 'Today':
-                    event_date = today
+                    start_date = today
                 elif date_str == 'Tomorrow':
-                    event_date = today + timedelta(days=1)
+                    start_date = today + timedelta(days=1)
                 else:
                     # Try to parse other date formats
                     try:
                         # Format like 'Mon, Dec 30'
-                        event_date = datetime.strptime(f"{date_str} {year}", "%a, %b %d %Y").date()
+                        start_date = datetime.strptime(f"{date_str} {year}", "%a, %b %d %Y").date()
                     except:
                         continue
         
-        if event_date and event_date not in events_by_date:
-            events_by_date[event_date] = []
-        if event_date:
-            events_by_date[event_date].append(event)
+        # Try to get end date
+        if 'end_datetime' in event and event['end_datetime']:
+            try:
+                if isinstance(event['end_datetime'], str):
+                    if 'T' in event['end_datetime']:
+                        dt = datetime.fromisoformat(event['end_datetime'].replace('Z', '+00:00'))
+                        end_date = dt.date()
+                    else:
+                        end_date = datetime.fromisoformat(event['end_datetime']).date()
+                else:
+                    end_date = event['end_datetime'].date()
+            except:
+                end_date = start_date  # Single day event
+        else:
+            end_date = start_date  # Single day event if no end date
+        
+        # Add event to all days it spans
+        if start_date and end_date:
+            current_date = start_date
+            while current_date <= end_date:
+                if current_date not in events_by_date:
+                    events_by_date[current_date] = []
+                events_by_date[current_date].append(event)
+                current_date += timedelta(days=1)
     
     # Build calendar data structure
     calendar_data = []
@@ -1746,24 +1768,27 @@ def calendar3_dashboard():
         cal = calendar.monthcalendar(year, month)
         today = now.date()
         
-        # Group events by date for this month
+        # Group events by date - HANDLE MULTI-DAY EVENTS
         month_events = {}
+        
         for event in events:
             if not event or not isinstance(event, dict):
                 continue
                 
-            event_date = None
+            start_date = None
+            end_date = None
+            event_title = event.get('title', 'Unknown Event')
             
-            # Parse event date
+            # Parse event start date
             if 'date_obj' in event and event['date_obj']:
                 date_obj_value = event['date_obj']
                 if isinstance(date_obj_value, str):
                     try:
-                        event_date = datetime.fromisoformat(date_obj_value).date()
+                        start_date = datetime.fromisoformat(date_obj_value).date()
                     except:
                         continue
                 else:
-                    event_date = date_obj_value
+                    start_date = date_obj_value
             elif 'start_datetime' in event and event['start_datetime']:
                 try:
                     start_dt_str = event['start_datetime']
@@ -1771,17 +1796,56 @@ def calendar3_dashboard():
                         if start_dt_str.endswith('Z'):
                             start_dt_str = start_dt_str.replace('Z', '+00:00')
                         dt = datetime.fromisoformat(start_dt_str)
-                        event_date = dt.date()
+                        start_date = dt.date()
                     else:
-                        event_date = datetime.fromisoformat(start_dt_str).date()
+                        start_date = datetime.fromisoformat(start_dt_str).date()
                 except:
                     pass
             
-            # Only include events for this month
-            if event_date and event_date.year == year and event_date.month == month:
-                if event_date not in month_events:
-                    month_events[event_date] = []
-                month_events[event_date].append(event)
+            # Parse event end date
+            if 'end_datetime' in event and event['end_datetime']:
+                try:
+                    end_dt_str = event['end_datetime']
+                    if 'T' in end_dt_str:
+                        if end_dt_str.endswith('Z'):
+                            end_dt_str = end_dt_str.replace('Z', '+00:00')
+                        dt = datetime.fromisoformat(end_dt_str)
+                        end_date = dt.date()
+                    else:
+                        end_date = datetime.fromisoformat(end_dt_str).date()
+                except:
+                    end_date = start_date  # Single day event
+            else:
+                end_date = start_date  # Single day event if no end date
+            
+            # Add event to all days it spans within this month
+            # For Google Calendar, end dates are exclusive (event ends at start of end_date)
+            if start_date and end_date:
+                # For all-day events, end_date is exclusive, so subtract 1 day
+                if start_date == end_date:
+                    # Single day event
+                    actual_end_date = end_date
+                else:
+                    # Multi-day event - end_date is exclusive, so actual end is the day before
+                    actual_end_date = end_date - timedelta(days=1)
+                
+                current_date = start_date
+                while current_date <= actual_end_date:
+                    # Only include events for this month
+                    if current_date.year == year and current_date.month == month:
+                        if current_date not in month_events:
+                            month_events[current_date] = []
+                        
+                        # Add event with span information for better rendering
+                        event_copy = event.copy()
+                        event_copy['span_start'] = start_date
+                        event_copy['span_end'] = actual_end_date
+                        event_copy['is_span_start'] = (current_date == start_date)
+                        event_copy['is_span_end'] = (current_date == actual_end_date)
+                        event_copy['span_days'] = (actual_end_date - start_date).days + 1
+                        
+                        month_events[current_date].append(event_copy)
+                    current_date += timedelta(days=1)
         
         # Build month calendar HTML
         month_html = f'''
@@ -1800,12 +1864,81 @@ def calendar3_dashboard():
             </div>
             <div class="month-grid">'''
         
-        # Add calendar weeks
-        for week in cal:
-            month_html += '<div class="week-row">'
+        # Add calendar weeks and collect all spanning events first
+        all_spanning_events = []
+        week_structures = []
+        
+        for week_idx, week in enumerate(cal):
+            # Collect spanning events that start in this week
             for day in week:
                 if day == 0:
-                    month_html += '<div class="day-cell empty"></div>'
+                    continue
+                    
+                current_date = datetime(year, month, day).date()
+                day_events = month_events.get(current_date, [])
+                
+                for event in day_events:
+                    is_span_start = event.get('is_span_start', False)
+                    span_days = event.get('span_days', 1)
+                    
+                    if span_days > 1 and is_span_start:
+                        span_start = event.get('span_start')
+                        span_end = event.get('span_end')
+                        
+                        # Calculate which weeks this event spans across
+                        event_info = {
+                            'event': event,
+                            'start_date': span_start,
+                            'end_date': span_end,
+                            'start_week': week_idx,
+                            'segments': []  # Will store week segments
+                        }
+                        
+                        # Calculate segments for each week this event crosses
+                        current_segment_start = span_start
+                        for check_week_idx, check_week in enumerate(cal):
+                            if check_week_idx < week_idx:
+                                continue
+                                
+                            # Find dates in this week that are part of the event
+                            week_event_days = []
+                            week_start_col = None
+                            
+                            for col, day_num in enumerate(check_week):
+                                if day_num == 0:
+                                    continue
+                                check_date = datetime(year, month, day_num).date()
+                                
+                                if current_segment_start <= check_date <= span_end:
+                                    if week_start_col is None:
+                                        week_start_col = col + 1  # CSS grid is 1-indexed
+                                    week_event_days.append(check_date)
+                            
+                            if week_event_days:
+                                event_info['segments'].append({
+                                    'week_idx': check_week_idx,
+                                    'start_col': week_start_col,
+                                    'span_length': len(week_event_days),
+                                    'is_start': (check_week_idx == week_idx),
+                                    'is_end': (week_event_days[-1] == span_end)
+                                })
+                                
+                            # Update for next week
+                            if week_event_days and week_event_days[-1] < span_end:
+                                current_segment_start = week_event_days[-1] + timedelta(days=1)
+                            else:
+                                break
+                        
+                        all_spanning_events.append(event_info)
+        
+        # Now build the weeks with their spanning overlays
+        for week_idx, week in enumerate(cal):
+            week_html = f'<div class="week-row" id="week-{week_idx}">'
+            
+            # First pass: add all day cells
+            for day in week:
+                if day == 0:
+                    week_html += '<div class="day-cell empty"></div>'
                 else:
                     current_date = datetime(year, month, day).date()
                     is_today = current_date == today
@@ -1817,15 +1950,21 @@ def calendar3_dashboard():
                     if day_events:
                         day_class += " has-events"
                     
-                    # Create events HTML for this day
+                    # Create events HTML for this day - only single day events and event starts
                     events_html = ""
-                    for event in day_events[:2]:  # Show max 2 events per day for 3-month view
+                    for event in day_events[:2]:
                         title = event.get('title', 'Untitled')
                         time_str = event.get('time', '')
                         bg_color = event.get('calendar_bg_color', '#4285f4')
                         fg_color = event.get('calendar_fg_color', '#ffffff')
                         
-                        # Don't truncate title - let CSS handle display
+                        is_span_start = event.get('is_span_start', False)
+                        span_days = event.get('span_days', 1)
+                        
+                        # Skip ALL multi-day events - they are handled by spanning bars
+                        if span_days > 1:
+                            continue  # Skip all days of multi-day events - will be handled by spanning bars
+                        
                         display_title = title
                         if time_str and time_str != 'All day':
                             display_text = f"{time_str[:5]} - {display_title}"
@@ -1834,15 +1973,64 @@ def calendar3_dashboard():
                         
                         events_html += f'<div class="event-3" style="background-color: {bg_color}; color: {fg_color};">{display_text}</div>'
                     
-                    if len(day_events) > 2:
-                        events_html += f'<div class="event-3 more-3">+{len(day_events) - 2}</div>'
+                    if len([e for e in day_events if e.get('span_days', 1) == 1]) > 2:
+                        remaining = len([e for e in day_events if e.get('span_days', 1) == 1]) - 2
+                        events_html += f'<div class="event-3 more-3">+{remaining}</div>'
                     
-                    month_html += f'''
-                    <div class="{day_class}">
+                    week_html += f'''
+                    <div class="{day_class}" data-date="{current_date}">
                         <div class="day-number-3">{day}</div>
                         <div class="events-3">{events_html}</div>
                     </div>'''
-            month_html += '</div>'
+            
+            week_html += '</div>'
+            
+            # Second pass: add spanning event bars for this specific week
+            spanning_bars_html = ""
+            
+            for span_event in all_spanning_events:
+                # Find the segment for this week
+                week_segment = None
+                for segment in span_event['segments']:
+                    if segment['week_idx'] == week_idx:
+                        week_segment = segment
+                        break
+                
+                if week_segment:
+                    event = span_event['event']
+                    title = event.get('title', 'Untitled')
+                    time_str = event.get('time', '')
+                    bg_color = event.get('calendar_bg_color', '#4285f4')
+                    fg_color = event.get('calendar_fg_color', '#ffffff')
+                    
+                    # Show full title on start segment, abbreviated on continuation
+                    if week_segment['is_start']:
+                        if time_str and time_str != 'All day':
+                            display_text = f"{time_str[:5]} - {title}"
+                        else:
+                            display_text = title
+                    else:
+                        display_text = f"→ {title}"  # Continuation indicator
+                    
+                    spanning_bars_html += f'''
+                    <div class="spanning-event" style="
+                        grid-column: {week_segment['start_col']} / span {week_segment['span_length']};
+                        background-color: {bg_color}; 
+                        color: {fg_color};
+                        grid-row: 1;
+                        z-index: 10;
+                        margin-top: 95px;
+                        margin-bottom: 10px;
+                    ">{display_text}</div>'''
+            
+            # Combine week with spanning bars
+            month_html += f'''
+            <div class="week-container">
+                {week_html}
+                <div class="spanning-overlay">
+                    {spanning_bars_html}
+                </div>
+            </div>'''
         
         month_html += '''
             </div>
@@ -1952,11 +2140,45 @@ def calendar3_dashboard():
             height: 100%;
         }}
         
+        .week-container {{
+            position: relative;
+            flex: 1; /* EACH WEEK TAKES EQUAL HEIGHT */
+        }}
+        
         .week-row {{
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 12px;
-            flex: 1; /* EACH WEEK TAKES EQUAL HEIGHT */
+            height: 100%; /* FILL WEEK CONTAINER HEIGHT */
+        }}
+        
+        .spanning-overlay {{
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+            pointer-events: none; /* Allow clicking through to day cells */
+        }}
+        
+        .spanning-event {{
+            background: #4285f4;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 1.4em;
+            line-height: 1.3;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            height: 40px; /* Fixed height for spanning bars */
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.2);
         }}
         
         .day-cell {{
@@ -1968,6 +2190,35 @@ def calendar3_dashboard():
             display: flex;
             flex-direction: column;
             height: 100%; /* FILL WEEK ROW HEIGHT */
+            position: relative; /* For event positioning */
+        }}
+        
+        .week-row {{
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+            flex: 1; /* EACH WEEK TAKES EQUAL HEIGHT */
+            position: relative; /* For positioning spanning events */
+        }}
+        
+        .day-cell {{
+            background: #28292c;
+            border-radius: 15px;
+            padding: 20px 15px;
+            min-height: 160px; /* BIGGER CELLS FOR 4K */
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            height: 100%; /* FILL WEEK ROW HEIGHT */
+        }}
+        
+        .day-cell.today {{
+            background: #1a73e8;
+            color: white;
+        }}
+        
+        .day-cell.has-events {{
+            border-color: #34a853;
         }}
         
         .day-cell.today {{
@@ -1997,6 +2248,29 @@ def calendar3_dashboard():
             gap: 8px;
             flex: 1; /* TAKE REMAINING VERTICAL SPACE */
             overflow: hidden;
+            padding-top: 60px; /* Make room for spanning bars above */
+        }}
+        
+        .event-3 {{
+            background: #4285f4;
+            color: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 1.6em;
+            line-height: 1.3;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+        }}
+            flex-shrink: 0;
+        }}
+        
+        .events-3 {{
+            display: flex;
+            flex-direction: column;
+            gap: 12px; /* Increased gap between events for better separation */
+            flex: 1; /* TAKE REMAINING VERTICAL SPACE */
+            overflow: hidden;
         }}
         
         .event-3 {{
@@ -2016,6 +2290,7 @@ def calendar3_dashboard():
             font-size: 1.6em;
             font-style: italic;
             text-align: center;
+            margin-top: 6px; /* Add extra space above "more" indicator */
         }}
         
         .footer-3 {{

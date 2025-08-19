@@ -38,11 +38,24 @@ class GoogleCalendarAPI:
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 try:
+                    print("Attempting to refresh expired token...")
                     creds.refresh(Request())
+                    print("Token refreshed successfully")
+                    # Save the refreshed credentials
+                    with open(self.token_file, 'w') as token:
+                        token.write(creds.to_json())
                 except Exception as e:
                     print(f"Error refreshing credentials: {e}")
+                    print("Refresh token may be expired - need to re-authenticate")
+                    # Delete the invalid token file so we get a fresh auth next time
+                    try:
+                        os.remove(self.token_file)
+                        print(f"Removed invalid token file: {self.token_file}")
+                    except:
+                        pass
                     return False
             else:
+                print("No valid credentials available - starting fresh authentication")
                 if not os.path.exists(self.credentials_file):
                     print(f"Credentials file {self.credentials_file} not found!")
                     print("Please download credentials.json from Google Cloud Console")
@@ -52,9 +65,11 @@ class GoogleCalendarAPI:
                     self.credentials_file, SCOPES)
                 creds = flow.run_local_server(port=0)
                 
-            # Save the credentials for the next run
-            with open(self.token_file, 'w') as token:
-                token.write(creds.to_json())
+                # Save the credentials for the next run
+                with open(self.token_file, 'w') as token:
+                    token.write(creds.to_json())
+        else:
+            print("Using valid existing credentials")
                 
         try:
             self.service = build('calendar', 'v3', credentials=creds)
@@ -63,7 +78,7 @@ class GoogleCalendarAPI:
             print(f'An error occurred: {error}')
             return False
     
-    def get_upcoming_events(self, max_results=10, days_ahead=30):
+    def get_upcoming_events(self, max_results=10, days_ahead=90):
         """Get upcoming events from Google Calendar with extended search range"""
         print(f"Getting upcoming events (max: {max_results}, days: {days_ahead})")
         
@@ -230,6 +245,7 @@ class GoogleCalendarAPI:
                 'date': date_str,
                 'duration': duration_str,
                 'start_datetime': start,
+                'end_datetime': end,  # ADD THIS - we were missing the end datetime!
                 'date_obj': start_local.date() if 'T' in start else datetime.fromisoformat(start).date(),
                 'is_today': date_str == 'Today',
                 'is_all_day': 'T' not in start,
