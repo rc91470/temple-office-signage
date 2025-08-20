@@ -70,8 +70,8 @@ class DigitalSignage:
         self.last_strike_time = None
         self.safety_timer_minutes = 30  # 30 minutes after last strike
         self.lightning_active = False  # Track if we're in lightning mode
-        self.update_frequency_normal = 10  # Normal: 10 minutes
-        self.update_frequency_lightning = 2  # Lightning mode: 2 minutes
+        self.update_frequency_normal = 1  # Constant: 1 minute for fast lightning detection
+        self.update_frequency_lightning = 1  # Lightning mode: 1 minute (same as normal now)
         
         # SharePoint sync path
         self.sharepoint_path = "/home/pi/sharepoint-sync"
@@ -269,10 +269,10 @@ class DigitalSignage:
             
             # If we just entered lightning mode, reschedule updates
             if not was_lightning_active and self.lightning_active:
-                print(f"🌩️ LIGHTNING MODE ACTIVATED - Switching to {self.update_frequency_lightning}-minute updates")
+                print(f"🌩️ LIGHTNING MODE ACTIVATED - Enhanced monitoring (1-minute updates already active)")
                 self.reschedule_weather_updates()
             elif was_lightning_active and not self.lightning_active:
-                print(f"☀️ Lightning mode deactivated - Returning to {self.update_frequency_normal}-minute updates")
+                print(f"☀️ Lightning mode deactivated - Continuing 1-minute updates for fast detection")
                 self.reschedule_weather_updates()
             
             # Prepare response data
@@ -1013,7 +1013,7 @@ def home():
     <script>
         const dashboards = [
             { url: '/cfss', name: 'CFSS Dashboard', duration: 45000 },
-            { url: '/calendar3', name: '3-Month Calendar', duration: 45000 },
+            { url: '/calendar3', name: '3-Month Calendar', duration: 70000 },
             { url: '/weather', name: 'Temple Weather', duration: 45000 }
         ];
         
@@ -2069,22 +2069,34 @@ def calendar3_dashboard():
             overflow-x: hidden;
         }}
         
-        /* FIXED: Calendar 3-month scroll - ACTUALLY reaches all 3 months */
+        /* Calendar with consistent 4.5s holds and 2s transitions - 2 rotations */
         .auto-scroll {{
-            animation: scrollDown 22.5s infinite ease-in-out;
+            animation: scrollDown 70s infinite ease-in-out;
             transform: translateZ(0); /* Force hardware acceleration */
             will-change: transform; /* Optimize for smooth transforms */
             backface-visibility: hidden; /* Prevent flickering */
         }}
         
         @keyframes scrollDown {{
-            0% {{ transform: translateY(0) translateZ(0); }} /* Month 1 */
-            25% {{ transform: translateY(0) translateZ(0); }} /* Hold Month 1 - 4.5s */
-            35% {{ transform: translateY(-100vh) translateZ(0); }} /* Transition to Month 2 - 1.8s */
-            55% {{ transform: translateY(-100vh) translateZ(0); }} /* Hold Month 2 - 3.6s */
-            65% {{ transform: translateY(-200vh) translateZ(0); }} /* Transition to Month 3 - 1.8s */
-            90% {{ transform: translateY(-200vh) translateZ(0); }} /* Hold Month 3 - 4.5s LONGER */
-            100% {{ transform: translateY(0) translateZ(0); }} /* Return to Month 1 - 1.8s */
+            /* 4.5s holds, 4s moves - consistent timing */
+            0% {{ transform: translateY(0) translateZ(0); }} /* August - Start */
+            6.4% {{ transform: translateY(0) translateZ(0); }} /* Hold August - 4.5s */
+            12.1% {{ transform: translateY(-100vh) translateZ(0); }} /* Move to September - 4s */
+            18.6% {{ transform: translateY(-100vh) translateZ(0); }} /* Hold September - 4.5s */
+            24.3% {{ transform: translateY(-200vh) translateZ(0); }} /* Move to October - 4s */
+            30.7% {{ transform: translateY(-200vh) translateZ(0); }} /* Hold October - 4.5s */
+            36.4% {{ transform: translateY(-100vh) translateZ(0); }} /* Move back to September - 4s */
+            42.9% {{ transform: translateY(-100vh) translateZ(0); }} /* Hold September - 4.5s */
+            48.6% {{ transform: translateY(0) translateZ(0); }} /* Move back to August - 4s */
+            55.0% {{ transform: translateY(0) translateZ(0); }} /* Hold August - 4.5s (end 1st rotation) */
+            60.7% {{ transform: translateY(-100vh) translateZ(0); }} /* Move to September - 4s */
+            67.1% {{ transform: translateY(-100vh) translateZ(0); }} /* Hold September - 4.5s */
+            72.9% {{ transform: translateY(-200vh) translateZ(0); }} /* Move to October - 4s */
+            79.3% {{ transform: translateY(-200vh) translateZ(0); }} /* Hold October - 4.5s */
+            85.0% {{ transform: translateY(-100vh) translateZ(0); }} /* Move back to September - 4s */
+            91.4% {{ transform: translateY(-100vh) translateZ(0); }} /* Hold September - 4.5s */
+            97.1% {{ transform: translateY(0) translateZ(0); }} /* Move back to August - 4s */
+            100% {{ transform: translateY(0) translateZ(0); }} /* Hold August until dashboard switches */
         }}
         
         .calendar-container-3 {{
@@ -2100,11 +2112,12 @@ def calendar3_dashboard():
         }}
         
         .month-container {{
-            background: #202124;
-            border-radius: 25px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 30px;
             padding: 30px;
             margin-bottom: 20px;
-            border: 3px solid #3c4043;
+            border: 2px solid rgba(255,255,255,0.2);
+            box-shadow: 0 20px 80px rgba(0,0,0,0.4);
             height: calc(100vh - 40px); /* USE FULL SCREEN HEIGHT WITHOUT HEADER */
             display: flex;
             flex-direction: column;
@@ -2135,10 +2148,13 @@ def calendar3_dashboard():
             text-align: center;
             padding: 15px 8px;
             font-weight: 500;
-            color: #9aa0a6;
+            color: #e3f2fd;
             font-size: 2.8em;
-            background: #28292c;
-            border-radius: 12px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
         }}
         
         .month-grid {{
@@ -2191,15 +2207,16 @@ def calendar3_dashboard():
         }}
         
         .day-cell {{
-            background: #28292c;
-            border-radius: 15px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 18px;
             padding: 20px 15px;
             min-height: 160px; /* BIGGER CELLS FOR 4K */
-            border: 2px solid transparent;
+            border: 1px solid rgba(255,255,255,0.08);
             display: flex;
             flex-direction: column;
             height: 100%; /* FILL WEEK ROW HEIGHT */
             position: relative; /* For event positioning */
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
         }}
         
         .week-row {{
@@ -2211,19 +2228,23 @@ def calendar3_dashboard():
         }}
         
         .day-cell {{
-            background: #28292c;
-            border-radius: 15px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 18px;
             padding: 20px 15px;
             min-height: 160px; /* BIGGER CELLS FOR 4K */
-            border: 2px solid transparent;
+            border: 1px solid rgba(255,255,255,0.08);
             display: flex;
             flex-direction: column;
             height: 100%; /* FILL WEEK ROW HEIGHT */
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
         }}
         
         .day-cell.today {{
-            background: #1a73e8;
-            color: white;
+            background: rgba(26, 115, 232, 0.3);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(26, 115, 232, 0.6);
+            box-shadow: 0 8px 32px rgba(26, 115, 232, 0.4);
+            color: #e3f2fd;
         }}
         
         .day-cell.has-events {{
@@ -2231,8 +2252,11 @@ def calendar3_dashboard():
         }}
         
         .day-cell.today {{
-            background: #1a73e8;
-            color: white;
+            background: rgba(26, 115, 232, 0.3);
+            backdrop-filter: blur(12px);
+            border: 2px solid rgba(26, 115, 232, 0.6);
+            box-shadow: 0 8px 32px rgba(26, 115, 232, 0.4);
+            color: #e3f2fd;
         }}
         
         .day-cell.has-events {{
@@ -2240,7 +2264,9 @@ def calendar3_dashboard():
         }}
         
         .day-cell.empty {{
-            background: transparent;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
         }}
         
         .day-number-3 {{
@@ -2261,10 +2287,13 @@ def calendar3_dashboard():
         }}
         
         .event-3 {{
-            background: #4285f4;
-            color: white;
+            background: rgba(66, 133, 244, 0.25);
+            backdrop-filter: blur(10px);
+            color: #e8f0fe;
             padding: 12px 15px;
-            border-radius: 8px;
+            border-radius: 12px;
+            border: 1px solid rgba(66, 133, 244, 0.4);
+            box-shadow: 0 6px 24px rgba(66, 133, 244, 0.2);
             font-size: 1.6em;
             line-height: 1.3;
             word-wrap: break-word;
@@ -2283,10 +2312,13 @@ def calendar3_dashboard():
         }}
         
         .event-3 {{
-            background: #4285f4;
-            color: white;
+            background: rgba(66, 133, 244, 0.25);
+            backdrop-filter: blur(10px);
+            color: #e8f0fe;
             padding: 12px 15px;
-            border-radius: 8px;
+            border-radius: 12px;
+            border: 1px solid rgba(66, 133, 244, 0.4);
+            box-shadow: 0 6px 24px rgba(66, 133, 244, 0.2);
             font-size: 1.6em;
             line-height: 1.3;
             word-wrap: break-word;
@@ -2295,7 +2327,10 @@ def calendar3_dashboard():
         }}
         
         .event-3.more-3 {{
-            background: #34a853;
+            background: rgba(52, 168, 83, 0.25);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(52, 168, 83, 0.4);
+            box-shadow: 0 6px 24px rgba(52, 168, 83, 0.2);
             font-size: 1.6em;
             font-style: italic;
             text-align: center;
@@ -2381,8 +2416,7 @@ def weather_dashboard():
         
         # Lightning map visualization
         map_html = ""
-        update_freq = signage.get_update_frequency()
-        update_status = f"⚡ Lightning mode: {update_freq}min updates" if signage.lightning_active else f"🌤️ Normal mode: {update_freq}min updates"
+        update_status = f"⚡ Lightning mode: Enhanced alerts (1min updates)" if signage.lightning_active else f"🌤️ Normal mode: Fast detection (1min updates)"
         
         if strikes:
             # Create simple text-based strike display
