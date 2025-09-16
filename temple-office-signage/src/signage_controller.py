@@ -36,7 +36,7 @@ class DigitalSignage:
     def __init__(self):
         self.current_dashboard = 0
         self.dashboards = [
-            {"name": "CFSS Dashboard", "url": "http://localhost:8080/cfss", "duration": 45},
+            {"name": "CFSS Dashboard", "url": "http://localhost:8080/cfss", "duration": 90},
             {"name": "3-Month Calendar", "url": "http://localhost:8080/calendar3", "duration": 45},
             {"name": "Temple Weather", "url": "http://localhost:8080/weather", "duration": 45},
         ]
@@ -678,6 +678,14 @@ class DigitalSignage:
                     pass
             time.sleep(2)
             
+            # Disable screensaver and DPMS before starting browser
+            try:
+                subprocess.run(['xset', 's', 'off'], env={'DISPLAY': ':0'}, timeout=5, capture_output=True)
+                subprocess.run(['xset', '-dpms'], env={'DISPLAY': ':0'}, timeout=5, capture_output=True)
+                print(f"{timestamp}: Disabled screensaver and DPMS")
+            except Exception as e:
+                print(f"{timestamp}: Warning: Could not disable screensaver/DPMS: {e}")
+            
             # Start new browser process
             browser_cmd = [
                 'chromium',
@@ -690,6 +698,8 @@ class DigitalSignage:
                 '--disable-web-security',
                 '--disable-features=VizDisplayCompositor',
                 '--start-fullscreen',
+                '--disable-screensaver',
+                '--disable-background-timer-throttling',
                 '--display=:0',
                 'http://localhost:8080/'
             ]
@@ -762,6 +772,15 @@ class DigitalSignage:
                 
             # Browser is running
             self.last_browser_check = current_time
+            
+            # Ensure screensaver stays disabled
+            try:
+                subprocess.run(['xset', 's', 'off'], env={'DISPLAY': ':0'}, timeout=3, capture_output=True)
+                subprocess.run(['xset', '-dpms'], env={'DISPLAY': ':0'}, timeout=3, capture_output=True)
+            except Exception as e:
+                # Don't log this as error since it's just a precaution
+                pass
+            
             return True
             
         except Exception as e:
@@ -1012,8 +1031,8 @@ def home():
     
     <script>
         const dashboards = [
-            { url: '/cfss', name: 'CFSS Dashboard', duration: 45000 },
-            { url: '/calendar3', name: '3-Month Calendar', duration: 70000 },
+            { url: '/cfss', name: 'CFSS Dashboard', duration: 90000 },
+            { url: '/calendar3', name: '3-Month Calendar', duration: 45000 },
             { url: '/weather', name: 'Temple Weather', duration: 45000 }
         ];
         
@@ -1069,7 +1088,7 @@ def home():
 @app.route('/cfss')
 def cfss_dashboard():
     """Serve the main CFSS dashboard from uploaded file or fallback to sample"""
-    dashboard_path = '/home/pi/sharepoint-sync/dashboard.html'
+    dashboard_path = '/home/pi/RCcode/dashboards/dashboard.html'
     
     # Try to read the uploaded dashboard file
     try:

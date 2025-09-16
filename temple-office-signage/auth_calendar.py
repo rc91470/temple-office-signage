@@ -25,14 +25,8 @@ def authenticate():
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(credentials_file, SCOPES)
-            # Use manual code entry instead of localhost redirect
-            flow.redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'
-            auth_url, _ = flow.authorization_url(prompt='consent')
-            print(f"\n🔗 Visit this URL to authorize: {auth_url}")
-            print("\n📋 After authorization, copy the code and paste it below:")
-            code = input("Enter authorization code: ").strip()
-            flow.fetch_token(code=code)
-            creds = flow.credentials
+            # Use localhost redirect for proper OAuth flow
+            creds = flow.run_local_server(port=0)
         
         with open(token_file, 'w') as token:
             token.write(creds.to_json())
