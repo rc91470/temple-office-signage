@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CFSS Circuit Monitor - 4K Optimized</title>
+    <meta http-equiv="refresh" content="25">
+    <style>
+        body { 
+            font-family: Arial; 
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); 
+            color: white; 
+            margin: 0; 
+            padding: 40px; 
+            min-height: 100vh; 
+        }
+        .container { 
+            max-width: 1800px; 
+            margin: 0 auto; 
+            width: 95%; 
+        }
+        h1 { 
+            text-align: center; 
+            font-size: 6em; 
+            margin-bottom: 40px; 
+            text-shadow: 4px 4px 8px rgba(0,0,0,0.5); 
+        }
+        .metrics { 
+            display: flex; 
+            justify-content: space-around; 
+            flex-wrap: wrap; 
+        }
+        .metric { 
+            background: rgba(255,255,255,0.15); 
+            padding: 60px; 
+            border-radius: 30px; 
+            text-align: center; 
+            min-width: 450px; 
+            margin: 30px; 
+            box-shadow: 0 20px 80px rgba(0,0,0,0.3); 
+        }
+        .metric h2 { 
+            font-size: 4em; 
+            margin: 0; 
+        }
+        .metric p { 
+            font-size: 6em; 
+            margin: 20px 0; 
+            color: #4CAF50; 
+            font-weight: bold; 
+        }
+        .status-bar { 
+            background: rgba(0,0,0,0.3); 
+            padding: 40px; 
+            border-radius: 20px; 
+            margin-top: 40px; 
+        }
+        .status-bar h3 {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        .status-bar p {
+            font-size: 2.2em;
+            margin: 15px 0;
+            line-height: 1.4;
+        }
+        .timestamp { 
+            text-align: center; 
+            margin-top: 40px; 
+            font-size: 2.5em; 
+            opacity: 0.8; 
+        }
+        
+        /* Additional styling for better 4K display */
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+        
+        .status-good { background-color: #4CAF50; }
+        .status-warning { background-color: #FFC107; }
+        .status-error { background-color: #f44336; }
+        
+        .activity-item {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 15px 0;
+            border-left: 8px solid #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 CFSS Circuit Monitoring</h1>
+        
+        <div class="metrics">
+            <div class="metric">
+                <h2>Total Circuits</h2>
+                <p>17</p>
+            </div>
+            <div class="metric">
+                <h2>Active Now</h2>
+                <p>15</p>
+            </div>
+            <div class="metric">
+                <h2>System Health</h2>
+                <p style="color: #4CAF50;">GOOD</p>
+            </div>
+            <div class="metric">
+                <h2>Alerts</h2>
+                <p style="color: #FFC107;">2</p>
+            </div>
+        </div>
+        
+        <div class="status-bar">
+            <h3><span class="status-indicator status-good"></span>Recent Activity - Temple Office</h3>
+            
+            <div class="activity-item">
+                <strong>Circuit BB-DR:</strong> Connection stable (99.8% uptime)
+            </div>
+            
+            <div class="activity-item">
+                <strong>Circuit CS-EB:</strong> Performance optimal (15ms latency)
+            </div>
+            
+            <div class="activity-item">
+                <strong>Circuit RSW-MA:</strong> Monitoring active (24/7)
+            </div>
+            
+            <div class="activity-item" style="border-left-color: #FFC107;">
+                <strong>Alert:</strong> Circuit TX-101 - Minor latency increase detected
+            </div>
+            
+            <div class="activity-item" style="border-left-color: #FFC107;">
+                <strong>Alert:</strong> Scheduled maintenance window approaching (Friday 6PM)
+            </div>
+        </div>
+        
+        <div class="timestamp">
+            Last Updated: <script>document.write(new Date().toLocaleString());</script><br>
+            Next: Google Calendar
+        </div>
+    </div>
+</body>
+</html>

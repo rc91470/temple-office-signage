@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CFSS Project Dashboard - Real-time Monitoring</title>
+    <style>
+        /* 4K Monitor Scaling - Font-based scaling that preserves width */
+        html {
+            font-size: 1.4rem; /* Moderate font scaling for 4K readability */
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            width: 100%; /* Full width */
+            height: auto; /* Auto height for scrolling */
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+        
+        /* Auto-scroll animation - will be set dynamically */
+        .auto-scroll {
+            animation: autoScroll 60s infinite linear;
+        }
+        
+        /* Dynamic keyframes will be injected by JavaScript */
+        
+        /* Pause animation on hover */
+        .auto-scroll:hover {
+            animation-play-state: paused;
+        }
+        
+        /* Section highlighting */
+        .dashboard-section {
+            scroll-margin-top: 20px;
+            margin-bottom: 40px;
+            transition: all 0.5s ease;
+        }
+        
+        .dashboard-section.highlighted {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(52, 152, 219, 0.3);
+        }
+        
+        /* Auto-scroll controls */
+        .scroll-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            background: rgba(30, 41, 59, 0.9);
+            padding: 10px 15px;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .scroll-btn {
+            background: linear-gradient(145deg, rgba(52, 152, 219, 0.8), rgba(41, 128, 185, 0.7));
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .scroll-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+        }
+        
+        .scroll-btn.active {
+            background: linear-gradient(145deg, rgba(0, 255, 136, 0.8), rgba(0, 204, 106, 0.7));
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+        }
+        
+        /* Speed indicator */
+        .speed-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #a0a0a0;
+            font-size: 11px;
+        }
+        
+        .speed-bar {
+            width: 40px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .speed-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #00cc6a);
+            transition: width 0.3s ease;
+        }
+        .header {
+            text-align: center;
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(45, 62, 80, 0.8));
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 30px;
+            margin-bottom: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .summary {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(45, 62, 80, 0.6));
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            margin-bottom: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .circuits-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            justify-content: flex-start;
+        }
+        .circuit-card {
+            flex: 0 0 580px; /* Increased from 380px to make cards wider */
+            width: 580px; /* Match the flex-basis width */
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(45, 62, 80, 0.7));
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .circuit-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(145deg, transparent, rgba(255, 255, 255, 0.05));
+            pointer-events: none;
+            border-radius: 20px;
+        }
+        .circuit-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        .circuit-card.complete {
+            border-left: 4px solid #00ff88;
+            box-shadow: 0 8px 32px rgba(0, 255, 136, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .circuit-card.in-progress {
+            border-left: 4px solid #ffa500;
+            box-shadow: 0 8px 32px rgba(255, 165, 0, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .circuit-card.phase-1 {
+            border-left: 4px solid #3b82f6;
+            background: linear-gradient(145deg, rgba(59, 130, 246, 0.08), rgba(99, 102, 241, 0.06));
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .circuit-card.phase-1:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(59, 130, 246, 0.3),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        .circuit-card.phase-1 .progress-fill {
+            background: linear-gradient(90deg, #3b82f6, #6366f1);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+        .circuit-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .progress-bar {
+            background: linear-gradient(145deg, rgba(15, 15, 35, 0.8), rgba(30, 30, 50, 0.6));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+            height: 25px;
+            margin: 15px 0;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #00cc6a);
+            transition: width 0.5s ease;
+            position: relative;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+        }
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.3), transparent);
+            border-radius: 15px 15px 0 0;
+        }
+        .progress-fill.partial {
+            background: linear-gradient(90deg, #ffa500, #ff8c00);
+            box-shadow: 0 0 15px rgba(255, 165, 0, 0.3);
+        }
+        .jumper-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .jumper {
+            margin: 12px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .jumper-name {
+            font-weight: 600;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        .jumper-progress {
+            color: #a0a0a0;
+            font-weight: 500;
+        }
+        .record-count {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-top: 5px;
+            font-weight: 400;
+        }
+        .circuit-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .circuit-records {
+            font-size: 14px;
+            color: #a0a0a0;
+            font-weight: 500;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            gap: 15px;
+        }
+        .stat {
+            background: linear-gradient(145deg, rgba(52, 152, 219, 0.8), rgba(41, 128, 185, 0.7));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 20px;
+            border-radius: 18px;
+            flex: 1;
+            box-shadow: 0 6px 25px rgba(52, 152, 219, 0.25),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent);
+            pointer-events: none;
+        }
+        .stat:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(52, 152, 219, 0.35),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .stat-label {
+            font-size: 14px;
+            margin-top: 8px;
+            opacity: 0.9;
+            font-weight: 500;
+        }
+        
+        /* Mobile responsive styles */
+        @media screen and (max-width: 768px) {
+            body {
+                margin: 10px;
+                font-size: 14px;
+                min-height: 100vh;
+                background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%) !important;
+                background-attachment: fixed;
+            }
+            
+            html {
+                background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+                min-height: 100vh;
+            }
+            
+            .scroll-controls {
+                top: 10px;
+                right: 10px;
+                padding: 8px 12px;
+                flex-wrap: wrap;
+                max-width: calc(100vw - 20px);
+            }
+            
+            .scroll-btn {
+                padding: 6px 10px;
+                font-size: 11px;
+            }
+            
+            .speed-indicator {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                margin-top: 5px;
+            }
+            
+            .dashboard-section {
+                margin-bottom: 30px;
+            }
+            
+            .dashboard-section.highlighted {
+                transform: scale(1.01);
+            }
+            
+            .header {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+                margin-bottom: 10px;
+            }
+            
+            .header h2 {
+                font-size: 18px;
+                margin-bottom: 8px;
+            }
+            
+            .summary {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+            
+            .stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .stat {
+                padding: 15px;
+                margin-bottom: 8px;
+            }
+            
+            .stat-value {
+                font-size: 22px;
+            }
+            
+            .stat-label {
+                font-size: 12px;
+            }
+            
+            .circuits-grid {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .circuit-card {
+                flex: none;
+                width: 100%;
+                padding: 15px;
+                margin-bottom: 10px;
+            }
+            
+            .circuit-title {
+                font-size: 18px;
+                margin-bottom: 10px;
+            }
+            
+            .circuit-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .circuit-records {
+                font-size: 12px;
+            }
+            
+            .jumper {
+                padding: 6px 10px;
+                margin: 8px 0;
+            }
+            
+            .jumper-name {
+                font-size: 14px;
+            }
+            
+            .jumper-progress {
+                font-size: 12px;
+            }
+            
+            h2 {
+                font-size: 18px !important;
+                margin: 20px 0 15px 0 !important;
+                padding: 10px 15px !important;
+            }
+        }
+        
+        @media screen and (max-width: 480px) {
+            html, body {
+                background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%) !important;
+                background-attachment: fixed;
+                min-height: 100vh;
+            }
+            
+            body {
+                margin: 5px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .header h2 {
+                font-size: 16px;
+            }
+            
+            .stat-value {
+                font-size: 18px;
+            }
+            
+            .circuit-title {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Auto-scroll controls -->
+    <div class="scroll-controls">
+        <button class="scroll-btn active" id="autoScrollBtn">📺 Auto</button>
+        <button class="scroll-btn" id="pauseBtn">⏸️ Pause</button>
+        <button class="scroll-btn" id="resetBtn">🔄 Reset</button>
+        <div class="speed-indicator">
+            <span>Speed:</span>
+            <div class="speed-bar">
+                <div class="speed-fill" id="speedFill" style="width: 50%"></div>
+            </div>
+        </div>
+        <button class="scroll-btn" id="speedBtn">⚡ Medium</button>
+    </div>
+
+    <div id="dashboardContent" class="auto-scroll">
+        <div class="dashboard-section" id="header-section">
+            <div class="header">
+                <h1>CFSS Project Dashboard</h1>
+                <h2>Real-time Update - September 01, 2025</h2>
+                <p>Live Fiber Scanning Progress - Actual Data</p>
+            </div>
+        </div>
+
+        <div class="dashboard-section" id="summary-section">
+            <div class="summary">
+                <!-- Main Project Header -->
+                <div style="text-align: center; margin-bottom: 40px;">
+                    <h2 style="font-size: 2.8rem; font-weight: 800; color: #ffffff; margin-bottom: 20px; text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);">📊 CFSS CENTRAL FIBER SCANNING PROJECT</h2>
+                    <div style="font-size: 1.8rem; color: #ffffff; margin-bottom: 15px;">Total Project Scope: <span style="color: #10b981; font-weight: 700;">271,282 records</span> across <span style="color: #3b82f6; font-weight: 700;">23 circuits</span></div>
+                    <div style="font-size: 1.6rem; color: #f59e0b;">Overall Progress: <span style="color: #ffffff; font-weight: 600;">11,958 matches (4.41%)</span></div>
+                    <div style="font-size: 1.4rem; color: #94a3b8; margin-top: 10px;">Last Updated: September 01, 2025</div>
+                </div>
+
+                <!-- GS ENS Ready Phase Summary -->
+                <div style="margin-bottom: 30px;">
+                    <h3 style="font-size: 2.4rem; font-weight: 700; color: #10b981; text-align: center; margin-bottom: 20px;">🎯 GS ENS READY</h3>
+                    <div class="stats" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px;">
+                        <div class="stat">
+                            <div class="stat-value">90.36%</div>
+                            <div class="stat-label">Progress</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">11,958</div>
+                            <div class="stat-label">Matches</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">13,234</div>
+                            <div class="stat-label">Total Records</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">11/19</div>
+                            <div class="stat-label">Circuits Complete</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">1,276</div>
+                            <div class="stat-label">Remaining</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-section" id="active-section">
+            <h2 style="color: #10b981; margin: 30px 0 20px 0; padding: 15px 20px; border-radius: 15px; background: linear-gradient(145deg, rgba(16, 185, 129, 0.1), rgba(34, 197, 94, 0.08)); backdrop-filter: blur(10px); border: 1px solid rgba(16, 185, 129, 0.2); box-shadow: 0 4px 20px rgba(16, 185, 129, 0.15); text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);">🎯 GS ENS READY - ACTIVE CIRCUITS (8/19)</h2>
+
+    <div class="circuits-grid">
+        <div class="circuit-card in-progress">
+            <div class="circuit-title">CORP</div>
+            <div class="circuit-info">
+                <div>88.0% IN PROGRESS</div>
+                <div class="circuit-records">66/75 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill partial" style="width: 88.0%"></div>
+            </div>
+            <div class="jumper-section">
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 1</div>
+                    <div class="jumper-progress">89.0% (65/73)</div>
+                </div>
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 2</div>
+                    <div class="jumper-progress">50.0% (1/2)</div>
+                </div>
+                <div style="margin-top: 10px; padding: 8px; background: rgba(220, 53, 69, 0.1); border-radius: 6px; border-left: 3px solid #dc3545; word-wrap: break-word; overflow: visible;">
+                    <div style="font-weight: bold; color: #dc3545; margin-bottom: 4px;">⚠️ Issues Found: 5</div>
+                    <div style="font-size: 0.85em; color: #adb5bd; word-wrap: break-word; overflow: visible;">Jumper 1: 4, Jumper 2: 1</div>
+                </div>
+            </div>
+        </div>
+        <div class="circuit-card in-progress">
+            <div class="circuit-title">RSW_CS</div>
+            <div class="circuit-info">
+                <div>99.0% IN PROGRESS</div>
+                <div class="circuit-records">95/96 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill partial" style="width: 99.0%"></div>
+            </div>
+            <div class="jumper-section">
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 1</div>
+                    <div class="jumper-progress">100.0% (48/48)</div>
+                </div>
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 2</div>
+                    <div class="jumper-progress">97.9% (47/48)</div>
+                </div>
+            </div>
+        </div>
+        <div class="circuit-card in-progress">
+            <div class="circuit-title">CSW_RSW</div>
+            <div class="circuit-info">
+                <div>53.7% IN PROGRESS</div>
+                <div class="circuit-records">1,026/1,912 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill partial" style="width: 53.7%"></div>
+            </div>
+            <div class="jumper-section">
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 1</div>
+                    <div class="jumper-progress">69.2% (451/652)</div>
+                </div>
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 2</div>
+                    <div class="jumper-progress">88.7% (575/648)</div>
+                </div>
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 3</div>
+                    <div class="jumper-progress">0.0% (0/612)</div>
+                </div>
+                <div style="margin-top: 10px; padding: 8px; background: rgba(220, 53, 69, 0.1); border-radius: 6px; border-left: 3px solid #dc3545; word-wrap: break-word; overflow: visible;">
+                    <div style="font-weight: bold; color: #dc3545; margin-bottom: 4px;">⚠️ Issues Found: 201</div>
+                    <div style="font-size: 0.85em; color: #adb5bd; word-wrap: break-word; overflow: visible;">Jumper 1: 201 issues</div>
+                </div>
+            </div>
+        </div>
+        <div class="circuit-card in-progress">
+            <div class="circuit-title">EB_DR</div>
+            <div class="circuit-info">
+                <div>98.4% IN PROGRESS</div>
+                <div class="circuit-records">944/959 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill partial" style="width: 98.4%"></div>
+            </div>
+            <div class="jumper-section">
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 1</div>
+                    <div class="jumper-progress">100.0% (256/256)</div>
+                </div>
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 2</div>
+                    <div class="jumper-progress">97.3% (249/256)</div>
+                </div>
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 3</div>
+                    <div class="jumper-progress">96.9% (247/255)</div>
+                </div>
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 4</div>
+                    <div class="jumper-progress">100.0% (192/192)</div>
+                </div>
+            </div>
+            <div style="margin-top: 10px; padding: 8px; background: rgba(220, 53, 69, 0.1); border-radius: 6px; border-left: 3px solid #dc3545;">
+                <div style="font-weight: bold; color: #dc3545; margin-bottom: 4px;">⚠️ Issues Found: 3</div>
+                <div style="font-size: 0.85em; color: #adb5bd; word-wrap: break-word; overflow: visible;">Jumper 3: 3 issues</div>
+            </div>
+        </div>
+        <div class="circuit-card in-progress">
+            <div class="circuit-title">MA_XSW</div>
+            <div class="circuit-info">
+                <div>99.6% IN PROGRESS</div>
+                <div class="circuit-records">3,314/3,328 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill partial" style="width: 99.6%"></div>
+            </div>
+            <div class="jumper-section">
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 1</div>
+                    <div class="jumper-progress">100.0% (1536/1536)</div>
+                </div>
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 2</div>
+                    <div class="jumper-progress">99.2% (127/128)</div>
+                </div>
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 3</div>
+                    <div class="jumper-progress">100.0% (128/128)</div>
+                </div>
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 4</div>
+                    <div class="jumper-progress">99.2% (1523/1536)</div>
+                </div>
+                <div style="margin-top: 10px; padding: 8px; background: rgba(220, 53, 69, 0.1); border-radius: 6px; border-left: 3px solid #dc3545; word-wrap: break-word; overflow: visible;">
+                    <div style="font-weight: bold; color: #dc3545; margin-bottom: 4px;">⚠️ Issues Found: 6</div>
+                    <div style="font-size: 0.85em; color: #adb5bd; word-wrap: break-word; overflow: visible;">Jumper 2: 1, Jumper 4: 5</div>
+                </div>
+            </div>
+        </div>
+        <div class="circuit-card in-progress">
+            <div class="circuit-title">BB_DR</div>
+            <div class="circuit-info">
+                <div>67.0% IN PROGRESS</div>
+                <div class="circuit-records">75/112 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill partial" style="width: 67.0%"></div>
+            </div>
+            <div class="jumper-section">
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 1</div>
+                    <div class="jumper-progress">75.0% (48/64)</div>
+                </div>
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 2</div>
+                    <div class="jumper-progress">56.3% (27/48)</div>
+                </div>
+            </div>
+            <div style="margin-top: 10px; padding: 8px; background: rgba(220, 53, 69, 0.1); border-radius: 6px; border-left: 3px solid #dc3545;">
+                <div style="font-weight: bold; color: #dc3545; margin-bottom: 4px;">⚠️ Issues Found: 16</div>
+                <div style="font-size: 0.85em; color: #adb5bd; word-wrap: break-word; overflow: visible;">Jumper 1: 201 issues</div>
+            </div>
+        </div>
+        <div class="circuit-card in-progress">
+            <div class="circuit-title">EB_MA</div>
+            <div class="circuit-info">
+                <div>95.8% IN PROGRESS</div>
+                <div class="circuit-records">2,390/2,496 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill partial" style="width: 95.8%"></div>
+            </div>
+            <div class="jumper-section">
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 1</div>
+                    <div class="jumper-progress">100.0% (1024/1024)</div>
+                </div>
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 2</div>
+                    <div class="jumper-progress">62.1% (159/256)</div>
+                </div>
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 3</div>
+                    <div class="jumper-progress">98.0% (439/448)</div>
+                </div>
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 4</div>
+                    <div class="jumper-progress">100.0% (768/768)</div>
+                </div>
+                <div style="margin-top: 10px; padding: 8px; background: rgba(220, 53, 69, 0.1); border-radius: 6px; border-left: 3px solid #dc3545; word-wrap: break-word; overflow: visible;">
+                    <div style="font-weight: bold; color: #dc3545; margin-bottom: 4px;">⚠️ Issues Found: 102</div>
+                    <div style="font-size: 0.85em; color: #adb5bd; word-wrap: break-word; overflow: visible;">Jumper 2: 93, Jumper 3: 9</div>
+                </div>
+            </div>
+        </div>
+        <div class="circuit-card in-progress">
+            <div class="circuit-title">EB_XSR</div>
+            <div class="circuit-info">
+                <div>0.0% IN PROGRESS</div>
+                <div class="circuit-records">0/208 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill partial" style="width: 0.0%"></div>
+            </div>
+            <div class="jumper-section">
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 1</div>
+                    <div class="jumper-progress">0.0% (0/64)</div>
+                </div>
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 2</div>
+                    <div class="jumper-progress">0.0% (0/64)</div>
+                </div>
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 3</div>
+                    <div class="jumper-progress">0.0% (0/64)</div>
+                </div>
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 4</div>
+                    <div class="jumper-progress">0.0% (0/16)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="dashboard-section" id="completed-section">
+        <h2 style="color: #00ff88; margin: 50px 0 20px 0; padding: 15px 20px; border-radius: 15px; background: linear-gradient(145deg, rgba(0, 255, 136, 0.1), rgba(0, 204, 106, 0.08)); backdrop-filter: blur(10px); border: 1px solid rgba(0, 255, 136, 0.2); box-shadow: 0 4px 20px rgba(0, 255, 136, 0.15); text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);">✅ COMPLETED CIRCUITS (11/19)</h2>
+    
+        <div class="circuits-grid">
+        <div class="circuit-card complete">
+            <div class="circuit-title">CS_EB</div>
+            <div class="circuit-info">
+                <div>100% COMPLETE</div>
+                <div class="circuit-records">32/32 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 100.0%"></div>
+            </div>
+        </div>
+        <div class="circuit-card complete">
+            <div class="circuit-title">CS_MA</div>
+            <div class="circuit-info">
+                <div>100% COMPLETE</div>
+                <div class="circuit-records">64/64 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 100.0%"></div>
+            </div>
+        </div>
+        <div class="circuit-card complete">
+            <div class="circuit-title">CS_XSW</div>
+            <div class="circuit-info">
+                <div>100% COMPLETE</div>
+                <div class="circuit-records">1,536/1,536 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 100.0%"></div>
+            </div>
+        </div>
+        <div class="circuit-card complete">
+            <div class="circuit-title">EB_EB</div>
+            <div class="circuit-info">
+                <div>100% COMPLETE</div>
+                <div class="circuit-records">768/768 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 100.0%"></div>
+            </div>
+            <div class="jumper-section">
+                <div class="jumper">
+                    <div class="jumper-name">Jumper 1</div>
+                    <div class="jumper-progress">100.0% (768/768)</div>
+                </div>
+            </div>
+        </div>
+        <div class="circuit-card complete">
+            <div class="circuit-title">OOBCS_BB</div>
+            <div class="circuit-info">
+                <div>100% COMPLETE</div>
+                <div class="circuit-records">4/4 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 100.0%"></div>
+            </div>
+        </div>
+        <div class="circuit-card complete">
+            <div class="circuit-title">OOBCS_DR</div>
+            <div class="circuit-info">
+                <div>100% COMPLETE</div>
+                <div class="circuit-records">4/4 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 100.0%"></div>
+            </div>
+        </div>
+        <div class="circuit-card complete">
+            <div class="circuit-title">OOBSW_BB</div>
+            <div class="circuit-info">
+                <div>100% COMPLETE</div>
+                <div class="circuit-records">4/4 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 100.0%"></div>
+            </div>
+        </div>
+        <div class="circuit-card complete">
+            <div class="circuit-title">OOBSW_DR</div>
+            <div class="circuit-info">
+                <div>100% COMPLETE</div>
+                <div class="circuit-records">4/4 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 100.0%"></div>
+            </div>
+        </div>
+        <div class="circuit-card complete">
+            <div class="circuit-title">RSW_EB</div>
+            <div class="circuit-info">
+                <div>100% COMPLETE</div>
+                <div class="circuit-records">32/32 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 100.0%"></div>
+            </div>
+        </div>
+        <div class="circuit-card complete">
+            <div class="circuit-title">RSW_MA</div>
+            <div class="circuit-info">
+                <div>100% COMPLETE</div>
+                <div class="circuit-records">64/64 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 100.0%"></div>
+            </div>
+        </div>
+        <div class="circuit-card complete">
+            <div class="circuit-title">RSW_XSW</div>
+            <div class="circuit-info">
+                <div>100% COMPLETE</div>
+                <div class="circuit-records">1,536/1,536 records</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 100.0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-section" id="phase1-section" style="margin-top: 50px;">
+        <h2 style="color: #3b82f6; margin: 30px 0 20px 0; padding: 15px 20px; border-radius: 15px; background: linear-gradient(145deg, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.08)); backdrop-filter: blur(10px); border: 1px solid rgba(59, 130, 246, 0.2); box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15); text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);">🚀 PHASE 1 PRODUCTION - XSW-SSW CIRCUITS</h2>
+
+        <div style="margin-bottom: 30px;">
+            <div class="stats" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px;">
+                <div class="stat">
+                    <div class="stat-value">0.00%</div>
+                            <div class="stat-label">Progress</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Scanned</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">258,048</div>
+                            <div class="stat-label">Total Records</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">0/4</div>
+                    <div class="stat-label">Circuits Complete</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">258,048</div>
+                    <div class="stat-label">Remaining</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="circuits-grid">
+            <div class="circuit-card phase-1">
+                <div class="circuit-title">XSW_SSW_1</div>
+                <div class="circuit-info">
+                    <div>0.00% PENDING</div>
+                    <div class="circuit-records">0/64,512 records</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0.0%"></div>
+                </div>
+                <div class="jumper-section">
+                    <div class="jumper">
+                        <div class="jumper-name">Jumper 1</div>
+                        <div class="jumper-progress">0.00% (0/16,128)</div>
+                    </div>
+                    <div class="jumper">
+                        <div class="jumper-name">Jumper 2</div>
+                        <div class="jumper-progress">0.00% (0/16,128)</div>
+                    </div>
+                    <div class="jumper">
+                        <div class="jumper-name">Jumper 3</div>
+                        <div class="jumper-progress">0.00% (0/16,128)</div>
+                    </div>
+                    <div class="jumper">
+                        <div class="jumper-name">Jumper 4</div>
+                        <div class="jumper-progress">0.00% (0/16,128)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="circuit-card phase-1">
+                <div class="circuit-title">XSW_SSW_2</div>
+                <div class="circuit-info">
+                    <div>0.00% PENDING</div>
+                    <div class="circuit-records">0/64,512 records</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0.0%"></div>
+                </div>
+                <div class="jumper-section">
+                    <div class="jumper">
+                        <div class="jumper-name">Jumper 1</div>
+                        <div class="jumper-progress">0.00% (0/16,128)</div>
+                    </div>
+                    <div class="jumper">
+                        <div class="jumper-name">Jumper 2</div>
+                        <div class="jumper-progress">0.00% (0/16,128)</div>
+                    </div>
+                    <div class="jumper">
+                        <div class="jumper-name">Jumper 3</div>
+                        <div class="jumper-progress">0.00% (0/16,128)</div>
+                    </div>
+                    <div class="jumper">
+                        <div class="jumper-name">Jumper 4</div>
+                        <div class="jumper-progress">0.00% (0/16,128)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="circuit-card phase-1">
+                <div class="circuit-title">XSW_SSW_3</div>
+                <div class="circuit-info">
+                    <div>0.00% PENDING</div>
+                    <div class="circuit-records">0/64,512 records</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0.0%"></div>
+                </div>
+                <div class="jumper-section">
+                    <div class="jumper">
+                        <div class="jumper-name">Jumper 1</div>
+                        <div class="jumper-progress">0.00% (0/16,128)</div>
+                    </div>
+                    <div class="jumper">
+                        <div class="jumper-name">Jumper 2</div>
+                        <div class="jumper-progress">0.00% (0/16,128)</div>
+                    </div>
+                    <div class="jumper">
+                        <div class="jumper-name">Jumper 3</div>
+                        <div class="jumper-progress">0.00% (0/16,128)</div>
+                    </div>
+                    <div class="jumper">
+                        <div class="jumper-name">Jumper 4</div>
+                        <div class="jumper-progress">0.00% (0/16,128)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="circuit-card phase-1">
+                <div class="circuit-title">XSW_SSW_4</div>
+                <div class="circuit-info">
+                    <div>0.00% PENDING</div>
+                    <div class="circuit-records">0/64,512 records</div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0.0%"></div>
+                </div>
+                <div class="jumper-section">
+                    <div class="jumper">
+                        <div class="jumper-name">Jumper 1</div>
+                        <div class="jumper-progress">0.00% (0/16,128)</div>
+                    </div>
+                    <div class="jumper">
+                        <div class="jumper-name">Jumper 2</div>
+                        <div class="jumper-progress">0.00% (0/16,128)</div>
+                    </div>
+                    <div class="jumper">
+                        <div class="jumper-name">Jumper 3</div>
+                        <div class="jumper-progress">0.00% (0/16,128)</div>
+                    </div>
+                    <div class="jumper">
+                        <div class="jumper-name">Jumper 4</div>
+                        <div class="jumper-progress">0.00% (0/16,128)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div> <!-- End dashboard content -->
+
+    <script>
+        // Auto-scroll functionality with dynamic content height calculation
+        let isAutoScrolling = true;
+        let currentSpeed = 60; // seconds for full cycle
+        const speeds = {
+            slow: 90,
+            medium: 60,
+            fast: 30
+        };
+        
+        const dashboardContent = document.getElementById('dashboardContent');
+        const autoScrollBtn = document.getElementById('autoScrollBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const speedBtn = document.getElementById('speedBtn');
+        const speedFill = document.getElementById('speedFill');
+        
+        // Calculate and create dynamic scroll animation
+        function createScrollAnimation() {
+            console.log('📝 createScrollAnimation called - using CSS animation');
+            
+            // Force a large scroll distance that should work for most content
+            const maxScroll = 8000; // Hard-coded large scroll distance in pixels
+            
+            console.log(`🎯 Using hard-coded MaxScroll: ${maxScroll}px`);
+            
+            // Create CSS keyframes with hard-coded large scroll
+            const keyframes = `
+                @keyframes autoScroll {
+                    0% { transform: translateY(0px); }
+                    15% { transform: translateY(-2000px); }
+                    30% { transform: translateY(-4000px); }
+                    45% { transform: translateY(-6000px); }
+                    60% { transform: translateY(-${maxScroll}px); }
+                    75% { transform: translateY(-${maxScroll}px); }
+                    85% { transform: translateY(-4000px); }
+                    95% { transform: translateY(-1000px); }
+                    100% { transform: translateY(0px); }
+                }
+            `;
+            
+            // Remove existing keyframes if any
+            const existingStyle = document.getElementById('dynamic-scroll-keyframes');
+            if (existingStyle) {
+                existingStyle.remove();
+            }
+            
+            // Add new keyframes to document
+            const style = document.createElement('style');
+            style.id = 'dynamic-scroll-keyframes';
+            style.textContent = keyframes;
+            document.head.appendChild(style);
+            
+            console.log('✅ Dynamic scroll animation created');
+        }
+        
+        function updateAnimation() {
+            createScrollAnimation(); // Recreate animation with current content
+            
+            // Reset to top position first
+            dashboardContent.style.transform = 'translateY(0px)';
+            
+            // Remove existing animation
+            dashboardContent.style.animation = 'none';
+            
+            // Force repaint
+            dashboardContent.offsetHeight;
+            
+            // Apply new animation
+            dashboardContent.style.animation = `autoScroll ${currentSpeed}s infinite linear`;
+            dashboardContent.style.animationDuration = currentSpeed + 's';
+            
+            // Update speed indicator
+            const speedPercent = 100 - ((currentSpeed - 30) / 60) * 100;
+            speedFill.style.width = speedPercent + '%';
+            
+            console.log(`🔄 Animation updated: ${currentSpeed}s duration`);
+        }
+        
+        function toggleAutoScroll() {
+            if (isAutoScrolling) {
+                dashboardContent.style.animationPlayState = 'paused';
+                autoScrollBtn.classList.remove('active');
+                pauseBtn.classList.add('active');
+                autoScrollBtn.innerHTML = '📺 Auto';
+                pauseBtn.innerHTML = '⏸️ Paused';
+            } else {
+                dashboardContent.style.animationPlayState = 'running';
+                autoScrollBtn.classList.add('active');
+                pauseBtn.classList.remove('active');
+                autoScrollBtn.innerHTML = '📺 Running';
+                pauseBtn.innerHTML = '⏸️ Pause';
+            }
+            isAutoScrolling = !isAutoScrolling;
+        }
+        
+        function resetScroll() {
+            // Stop animation and reset to top
+            dashboardContent.style.animation = 'none';
+            dashboardContent.style.transform = 'translateY(0px)';
+            
+            // Force a repaint
+            dashboardContent.offsetHeight;
+            
+            setTimeout(() => {
+                updateAnimation(); // Recreate the animation
+                dashboardContent.style.animation = `autoScroll ${currentSpeed}s infinite linear`;
+                if (!isAutoScrolling) {
+                    dashboardContent.style.animationPlayState = 'paused';
+                }
+            }, 100);
+        }
+        
+        function cycleSpeed() {
+            if (currentSpeed === 60) {
+                currentSpeed = 30;
+                speedBtn.innerHTML = '⚡ Fast';
+            } else if (currentSpeed === 30) {
+                currentSpeed = 90;
+                speedBtn.innerHTML = '🐌 Slow';
+            } else {
+                currentSpeed = 60;
+                speedBtn.innerHTML = '⚡ Medium';
+            }
+            updateAnimation();
+        }
+        
+        // Event listeners
+        autoScrollBtn.addEventListener('click', toggleAutoScroll);
+        pauseBtn.addEventListener('click', toggleAutoScroll);
+        resetBtn.addEventListener('click', resetScroll);
+        speedBtn.addEventListener('click', cycleSpeed);
+        
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case ' ':
+                case 'p':
+                    e.preventDefault();
+                    toggleAutoScroll();
+                    break;
+                case 'r':
+                    resetScroll();
+                    break;
+                case 's':
+                    cycleSpeed();
+                    break;
+                case 'Escape':
+                    if (isAutoScrolling) toggleAutoScroll();
+                    break;
+            }
+        });
+        
+        // Initialize
+        updateAnimation();
+        
+        // Recalculate on window resize
+        window.addEventListener('resize', () => {
+            console.log('🔄 Window resized, recalculating scroll animation...');
+            updateAnimation();
+        });
+        
+        // Also recalculate after content loads completely
+        window.addEventListener('load', () => {
+            console.log('📄 Page fully loaded, creating final scroll animation...');
+            setTimeout(updateAnimation, 1000); // Give time for all content to render
+        });
+        
+        // Section highlighting (optional enhancement)
+        const sections = document.querySelectorAll('.dashboard-section');
+        let currentSectionIndex = 0;
+        
+        function highlightCurrentSection() {
+            if (!isAutoScrolling) return;
+            
+            sections.forEach(section => section.classList.remove('highlighted'));
+            sections[currentSectionIndex].classList.add('highlighted');
+            
+            currentSectionIndex = (currentSectionIndex + 1) % sections.length;
+        }
+        
+        // Highlight sections every 15 seconds during auto-scroll
+        setInterval(highlightCurrentSection, currentSpeed * 1000 / 4);
+        
+        // Auto-hide controls after 10 seconds of no interaction
+        let controlsTimeout;
+        const scrollControls = document.querySelector('.scroll-controls');
+        
+        function showControls() {
+            scrollControls.style.opacity = '1';
+            clearTimeout(controlsTimeout);
+            controlsTimeout = setTimeout(() => {
+                scrollControls.style.opacity = '0.3';
+            }, 10000);
+        }
+        
+        scrollControls.addEventListener('mouseenter', showControls);
+        document.addEventListener('mousemove', showControls);
+        
+        // Initial hide
+        setTimeout(() => {
+            scrollControls.style.opacity = '0.3';
+        }, 10000);
+    </script>
+</body>
+</html>
