@@ -14,8 +14,8 @@ SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 def authenticate():
     """Authenticate Google Calendar API"""
     creds = None
-    token_file = 'token.json'
-    credentials_file = 'credentials.json'
+    token_file = os.getenv('TOKEN_FILE', '/home/pi/RCcode/temple-office-signage/token.json')
+    credentials_file = os.getenv('CREDENTIALS_FILE', '/home/pi/RCcode/temple-office-signage/credentials.json')
     
     if os.path.exists(token_file):
         creds = Credentials.from_authorized_user_file(token_file, SCOPES)
@@ -25,8 +25,18 @@ def authenticate():
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(credentials_file, SCOPES)
-            # Use localhost redirect for proper OAuth flow
-            creds = flow.run_local_server(port=0)
+            # Support headless console auth when RUN_HEADLESS=1 is set
+            headless = os.getenv('RUN_HEADLESS', '0').lower() in ('1', 'true', 'yes')
+            if headless:
+                auth_url, _ = flow.authorization_url(prompt='consent')
+                print('\nPlease visit this URL on another device and paste the authorization code here:\n')
+                print(auth_url + '\n')
+                code = input('Enter authorization code: ').strip()
+                flow.fetch_token(code=code)
+                creds = flow.credentials
+            else:
+                # Default: open local server and complete OAuth via browser
+                creds = flow.run_local_server(port=0)
         
         with open(token_file, 'w') as token:
             token.write(creds.to_json())

@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import pytz
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+from google.oauth2 import service_account
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -33,6 +34,23 @@ class GoogleCalendarAPI:
         # The file token.json stores the user's access and refresh tokens.
         if os.path.exists(self.token_file):
             creds = Credentials.from_authorized_user_file(self.token_file, SCOPES)
+            
+        # If there are no (valid) credentials available, try service account first,
+        # then fall back to user OAuth flow.
+        if not creds or not creds.valid:
+            # Service account fallback: set SERVICE_ACCOUNT_FILE to the JSON key path
+            service_account_file = os.getenv('SERVICE_ACCOUNT_FILE')
+            if service_account_file and os.path.exists(service_account_file):
+                try:
+                    print(f"Using service account key: {service_account_file}")
+                    creds = service_account.Credentials.from_service_account_file(
+                        service_account_file, scopes=SCOPES)
+                    # No refresh token file for service accounts
+                    self.service = build('calendar', 'v3', credentials=creds)
+                    return True
+                except Exception as e:
+                    print(f"Service account authentication failed: {e}")
+                    # fall through to user OAuth
             
         # If there are no (valid) credentials available, let the user log in.
         if not creds or not creds.valid:
